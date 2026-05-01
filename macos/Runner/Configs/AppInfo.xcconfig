@@ -8,7 +8,7 @@
 PRODUCT_NAME = Cricket Khelo
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.cricketkhelo.apps
+PRODUCT_BUNDLE_IDENTIFIER = com.match.cricketkhelo.apps
 
 // The copyright displayed in application information
 PRODUCT_COPYRIGHT = Copyright © 2026 com.cricketkhelo. All rights reserved.
