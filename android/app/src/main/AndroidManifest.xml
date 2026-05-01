@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="cricket_khelo"
+        android:label="Cricket Khelo"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

@@ -1,4 +1,4 @@
-package com.example.cricket_khelo
+package com.cricketkhelo.apps
 
 import io.flutter.embedding.android.FlutterActivity
 
