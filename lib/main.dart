@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
@@ -10,43 +11,57 @@ import 'services/notification_service.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
 import 'models/user_model.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
   
-  // Request Permissions
-  await _requestInitialPermissions();
+  // Make Status Bar seamless with the UI
+  SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent, // Transparent status bar
+    statusBarIconBrightness: Brightness.light, // White icons for dark theme
+    systemNavigationBarColor: Color(0xFF0A192F), // Match bottom nav with Navy
+    systemNavigationBarIconBrightness: Brightness.light,
+  ));
 
-  // Initialize Notifications
-  final notificationService = NotificationService();
-  await notificationService.initNotifications();
+  NotificationService? notificationService;
+
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+
+    // Enable Offline Persistence for Realtime Database (Chat)
+    FirebaseDatabase.instance.setPersistenceEnabled(true);
+    FirebaseDatabase.instance.setPersistenceCacheSizeBytes(10000000); // 10MB
+    
+    // Configure Firestore for persistent caching
+    FirebaseFirestore.instance.settings = const Settings(
+      persistenceEnabled: true,
+      cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+    );
+
+    // Register Background Notification Handler
+    FirebaseMessaging.onBackgroundMessage(NotificationService.handleBackgroundMessage);
+
+    notificationService = NotificationService();
+  } catch (e) {
+    print("Firebase init error: $e");
+  }
 
   runApp(
     MultiProvider(
       providers: [
         Provider<AuthService>(create: (_) => AuthService()),
         Provider<FirestoreService>(create: (_) => FirestoreService()),
-        Provider<NotificationService>(create: (_) => notificationService),
+        Provider<NotificationService?>(create: (_) => notificationService),
       ],
       child: MyApp(),
     ),
   );
-}
-
-Future<void> _requestInitialPermissions() async {
-  // Request Location
-  Map<Permission, PermissionStatus> statuses = await [
-    Permission.location,
-    Permission.notification,
-  ].request();
-
-  if (statuses[Permission.location]!.isDenied) {
-    print("Location permission denied");
-  }
-  if (statuses[Permission.notification]!.isDenied) {
-    print("Notification permission denied");
-  }
 }
 
 class MyApp extends StatelessWidget {
@@ -56,10 +71,17 @@ class MyApp extends StatelessWidget {
       title: 'Cricket Khelo',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primaryColor: Color(0xFF0A192F), // Dark Navy Blue
+        primaryColor: Color(0xFF0A192F),
+        scaffoldBackgroundColor: Color(0xFFF1F5F9),
+        appBarTheme: AppBarTheme(
+          systemOverlayStyle: SystemUiOverlayStyle.light, // Ensure white icons on AppBar
+          backgroundColor: Color(0xFF0A192F),
+          elevation: 0,
+        ),
         colorScheme: ColorScheme.fromSeed(
           seedColor: Color(0xFF0A192F),
           primary: Color(0xFF0A192F),
+          surface: Color(0xFF0A192F),
         ),
         useMaterial3: true,
       ),
@@ -68,12 +90,52 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class AuthWrapper extends StatelessWidget {
+class AuthWrapper extends StatefulWidget {
+  @override
+  State<AuthWrapper> createState() => _AuthWrapperState();
+}
+
+class _AuthWrapperState extends State<AuthWrapper> {
+  bool _permissionsRequested = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initApp();
+  }
+
+  Future<void> _initApp() async {
+    await [
+      Permission.location,
+      Permission.notification,
+    ].request();
+    
+    final notificationService = Provider.of<NotificationService?>(context, listen: false);
+    if (notificationService != null) {
+      await notificationService.initNotifications();
+    }
+    
+    if (mounted) {
+      setState(() {
+        _permissionsRequested = true;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
     final firestoreService = Provider.of<FirestoreService>(context);
-    final notificationService = Provider.of<NotificationService>(context);
+    final notificationService = Provider.of<NotificationService?>(context);
+
+    if (!_permissionsRequested) {
+      return Scaffold(
+        backgroundColor: Color(0xFF0A192F),
+        body: Center(
+          child: CircularProgressIndicator(color: Colors.white),
+        ),
+      );
+    }
 
     return StreamBuilder<User?>(
       stream: authService.user,
@@ -83,12 +145,18 @@ class AuthWrapper extends StatelessWidget {
           if (user == null) {
             return LoginScreen();
           } else {
-            // Update user info in background
-            _updateUserInfo(user, firestoreService, notificationService);
+            if (notificationService != null) {
+              _updateUserInfo(user, firestoreService, notificationService);
+            }
             return HomeScreen();
           }
         }
-        return Scaffold(body: Center(child: CircularProgressIndicator()));
+        return Scaffold(
+          backgroundColor: Color(0xFF0A192F),
+          body: Center(
+            child: CircularProgressIndicator(color: Colors.white),
+          ),
+        );
       },
     );
   }
@@ -98,7 +166,6 @@ class AuthWrapper extends StatelessWidget {
       Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.low);
       String? token = await notifications.getToken();
       
-      // Default age group if not already set
       UserModel? existingUser = await firestore.getUser(user.uid);
       String ageGroup = existingUser?.ageGroup ?? "20+";
 
