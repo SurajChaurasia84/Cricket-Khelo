@@ -1,5 +1,7 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import '../main.dart';
+import 'dart:convert';
 
 class NotificationService {
   final FirebaseMessaging _fcm = FirebaseMessaging.instance;
@@ -25,15 +27,21 @@ class NotificationService {
     }
 
     // 2. Init Local Notifications for Android Foreground
-    const AndroidInitializationSettings androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const AndroidInitializationSettings androidSettings = AndroidInitializationSettings('ic_stat_sports_cricket');
     const DarwinInitializationSettings iosSettings = DarwinInitializationSettings();
     const InitializationSettings initSettings = InitializationSettings(android: androidSettings, iOS: iosSettings);
 
     await _localNotifications.initialize(
-      initSettings,
-      onDidReceiveNotificationResponse: (details) {
-        // Handle notification tap
-        print("Notification tapped: ${details.payload}");
+      settings: initSettings,
+      onDidReceiveNotificationResponse: (NotificationResponse details) {
+        if (details.payload != null) {
+          try {
+            Map<String, dynamic> data = jsonDecode(details.payload!);
+            _handleNotificationClick(data);
+          } catch (e) {
+            print("Payload parse error: $e");
+          }
+        }
       },
     );
 
@@ -43,32 +51,40 @@ class NotificationService {
         ?.createNotificationChannel(channel);
 
     // 4. Handle Foreground Messages
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
       RemoteNotification? notification = message.notification;
       AndroidNotification? android = message.notification?.android;
 
       if (notification != null && android != null) {
-        _localNotifications.show(
-          notification.hashCode,
-          notification.title,
-          notification.body,
-          NotificationDetails(
+        await _localNotifications.show(
+          id: notification.hashCode,
+          title: notification.title,
+          body: notification.body,
+          notificationDetails: NotificationDetails(
             android: AndroidNotificationDetails(
               channel.id,
               channel.name,
               channelDescription: channel.description,
-              icon: android.smallIcon ?? "@mipmap/ic_launcher",
+              icon: android.smallIcon ?? "ic_stat_sports_cricket",
             ),
           ),
-          payload: message.data.toString(),
+          payload: jsonEncode(message.data),
         );
       }
     });
 
     // 5. Handle Background/Terminated state tap
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      print("Notification opened app: ${message.data}");
+      _handleNotificationClick(message.data);
     });
+  }
+
+  static void _handleNotificationClick(Map<String, dynamic> data) {
+    String? type = data['type'];
+    if (type == 'match_invite' || type == 'join_request') {
+      // Navigate to Home (or a specific match detail if we had one)
+      navigatorKey.currentState?.pushNamedAndRemoveUntil('/', (route) => false);
+    }
   }
 
   Future<String?> getToken() async {
