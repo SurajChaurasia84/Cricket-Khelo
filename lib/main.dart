@@ -89,9 +89,9 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       routes: {
-        '/': (context) => const AuthWrapper(),
+        '/': (context) => AuthWrapper(),
       },
-      home: const AuthWrapper(),
+      initialRoute: '/',
     );
   }
 }
@@ -111,18 +111,29 @@ class _AuthWrapperState extends State<AuthWrapper> {
   }
 
   Future<void> _initApp() async {
-    await [
-      Permission.location,
-      Permission.notification,
-    ].request();
-    
-    final notificationService = Provider.of<NotificationService?>(context, listen: false);
-    if (notificationService != null) {
-      await notificationService.initNotifications();
+    try {
+      // Set a timeout for permission requests to prevent sticking on loader
+      await [
+        Permission.location,
+        Permission.notification,
+      ].request().timeout(const Duration(seconds: 10), onTimeout: () {
+        print("Permission request timed out");
+        return {};
+      });
+    } catch (e) {
+      print("Permission error: $e");
     }
 
-    final firestoreService = Provider.of<FirestoreService>(context, listen: false);
-    firestoreService.checkAndPerformReset(); // Trigger in background, don't wait
+    try {
+      final notificationService = Provider.of<NotificationService?>(context, listen: false);
+      if (notificationService != null) {
+        await notificationService.initNotifications().timeout(const Duration(seconds: 5));
+      }
+
+      final firestoreService = Provider.of<FirestoreService>(context, listen: false);
+    } catch (e) {
+      print("Service init error: $e");
+    }
     
     if (mounted) {
       setState(() {
