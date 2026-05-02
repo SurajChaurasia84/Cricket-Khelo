@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:provider/provider.dart';
@@ -43,6 +44,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         setState(() {}); // Update PopScope canPop state
       }
     });
+    
+    // Trigger Daily Midnight Reset (only after user is logged in)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<FirestoreService>(context, listen: false).checkAndPerformReset();
+    });
+
     _determinePosition();
   }
 
@@ -247,8 +254,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         child: ListTile(
                           leading: CircleAvatar(
-                            backgroundImage: req.requesterPhoto != null ? NetworkImage(req.requesterPhoto!) : null,
-                            child: req.requesterPhoto == null ? Icon(Icons.person) : null,
+                            radius: 22,
+                            backgroundColor: Colors.blueGrey[100],
+                            backgroundImage: req.requesterPhoto != null ? CachedNetworkImageProvider(req.requesterPhoto!) : null,
+                            child: req.requesterPhoto == null ? Icon(Icons.person, color: Colors.blueGrey) : null,
                           ),
                           title: Text(req.requesterName, style: TextStyle(fontWeight: FontWeight.bold)),
                           subtitle: Text("Status: ${req.status.toUpperCase()}", 
@@ -538,9 +547,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       child: Row(
                         children: [
                           CircleAvatar(
-                            radius: 18,
+                            radius: 22,
                             backgroundColor: _navyDark,
-                            backgroundImage: invite.creatorPhoto != null ? NetworkImage(invite.creatorPhoto!) : null,
+                            backgroundImage: invite.creatorPhoto != null ? CachedNetworkImageProvider(invite.creatorPhoto!) : null,
                             child: invite.creatorPhoto == null ? Icon(Icons.person, color: Colors.white, size: 20) : null,
                           ),
                           SizedBox(width: 12),
@@ -676,7 +685,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           CircleAvatar(
                             radius: 18,
                             backgroundColor: Colors.blueGrey[100],
-                            backgroundImage: req.playerPhoto != null ? NetworkImage(req.playerPhoto!) : null,
+                            backgroundImage: req.playerPhoto != null ? CachedNetworkImageProvider(req.playerPhoto!) : null,
                             child: req.playerPhoto == null ? Icon(Icons.person, color: Colors.blueGrey, size: 20) : null,
                           ),
                           SizedBox(width: 12),
