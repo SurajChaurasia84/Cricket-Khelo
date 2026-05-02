@@ -35,6 +35,8 @@ class ProfileScreen extends StatelessWidget {
             onSelected: (value) {
               if (value == 'logout') {
                 _showLogoutConfirmation(context, authService);
+              } else if (value == 'delete') {
+                _showDeleteAccountConfirmation(context, authService, firestoreService);
               }
             },
             itemBuilder: (context) => [
@@ -42,9 +44,19 @@ class ProfileScreen extends StatelessWidget {
                 value: 'logout',
                 child: Row(
                   children: [
-                    Icon(Icons.logout, color: Colors.red[700], size: 20),
+                    Icon(Icons.logout, color: Colors.blueGrey[700], size: 20),
                     SizedBox(width: 10),
-                    Text("Logout", style: TextStyle(color: Colors.red[700], fontWeight: FontWeight.bold)),
+                    Text("Logout", style: TextStyle(color: Colors.blueGrey[700], fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'delete',
+                child: Row(
+                  children: [
+                    Icon(Icons.delete_forever, color: Colors.red[700], size: 20),
+                    SizedBox(width: 10),
+                    Text("Delete Account", style: TextStyle(color: Colors.red[700], fontWeight: FontWeight.bold)),
                   ],
                 ),
               ),
@@ -165,6 +177,89 @@ class ProfileScreen extends StatelessWidget {
             ),
           );
         },
+      ),
+    );
+  }
+
+  void _showDeleteAccountConfirmation(BuildContext context, AuthService authService, FirestoreService firestoreService) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text("Delete Account?", style: TextStyle(fontWeight: FontWeight.w900, color: Colors.red[700])),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text("This action is permanent and cannot be undone. All your profile data will be deleted."),
+            SizedBox(height: 10),
+            Text("Note: If you haven't logged in recently, you might need to logout and login again to perform this sensitive action.", 
+              style: TextStyle(fontSize: 12, color: Colors.grey[600], fontStyle: FontStyle.italic)),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("CANCEL", style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.bold)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context); // Hide the FIRST dialog immediately
+              
+              // Show SECOND confirmation
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  title: Text("Confirm Deletion", style: TextStyle(fontWeight: FontWeight.w900, color: Colors.red[900])),
+                  content: Text("Are you sure? This will delete all your account data, matches, and requests forever. There is NO recovery."),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text("Cancel", style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.bold)),
+                    ),
+                    ElevatedButton(
+                      onPressed: () async {
+                        final User? user = FirebaseAuth.instance.currentUser;
+                        if (user != null) {
+                          try {
+                            String uid = user.uid;
+                            Navigator.pop(context); // Close 2nd dialog
+                            
+                            // 1. Delete Firestore Data
+                            await firestoreService.deleteUser(uid);
+                            
+                            // 2. Delete Auth Account
+                            await authService.deleteAccount();
+                            
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text("Account Deleted Successfully"), backgroundColor: Colors.red[700])
+                            );
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text("Error: Re-authentication required."), backgroundColor: Colors.orange[800])
+                            );
+                          }
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red[900],
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      child: Text("YES, DELETE EVERYTHING", style: TextStyle(fontWeight: FontWeight.bold)),
+                    ),
+                  ],
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red[700],
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: Text("DELETE PERMANENTLY", style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
       ),
     );
   }
