@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:provider/provider.dart';
@@ -27,6 +28,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   String _currentAddress = "Detecting location...";
   String? _locationError;
   final User? _user = FirebaseAuth.instance.currentUser;
+  DateTime? _lastPressedAt;
 
   final Color _navyDark = Color(0xFF0A192F);
   final Color _navyMedium = Color(0xFF172A45);
@@ -36,6 +38,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) {
+        setState(() {}); // Update PopScope canPop state
+      }
+    });
     _determinePosition();
   }
 
@@ -787,7 +794,34 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   Widget build(BuildContext context) {
     final firestoreService = Provider.of<FirestoreService>(context);
 
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        
+        if (_tabController.index != 0) {
+          _tabController.animateTo(0);
+        } else {
+          final now = DateTime.now();
+          if (_lastPressedAt == null || 
+              now.difference(_lastPressedAt!) > const Duration(seconds: 2)) {
+            _lastPressedAt = now;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text("Tap again to exit", textAlign: TextAlign.center),
+                duration: const Duration(seconds: 2),
+                backgroundColor: _navyDark.withOpacity(0.9),
+                behavior: SnackBarBehavior.floating,
+                width: 180,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+              ),
+            );
+          } else {
+            SystemNavigator.pop();
+          }
+        }
+      },
+      child: Scaffold(
       backgroundColor: Color(0xFFF1F5F9),
       appBar: AppBar(
         centerTitle: false,
@@ -850,8 +884,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         backgroundColor: _navyDark,
         elevation: 6,
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 class MatchChatSheet extends StatefulWidget {
