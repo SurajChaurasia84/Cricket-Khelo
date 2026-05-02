@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user_model.dart';
 import '../models/invite_model.dart';
+import '../models/request_model.dart';
+import '../models/player_request_model.dart';
 
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -36,5 +38,57 @@ class FirestoreService {
         .snapshots()
         .map((snapshot) =>
             snapshot.docs.map((doc) => InviteModel.fromMap(doc.data(), doc.id)).toList());
+  }
+
+  Future<void> deleteInvite(String inviteId) async {
+    await _db.collection('invites').doc(inviteId).delete();
+  }
+
+  // Request Operations
+  Future<void> sendJoinRequest(RequestModel request) async {
+    await _db.collection('requests').add(request.toMap());
+  }
+
+  Stream<List<RequestModel>> getRequestsForMatch(String matchId) {
+    return _db
+        .collection('requests')
+        .where('matchId', isEqualTo: matchId)
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .map((snapshot) =>
+            snapshot.docs.map((doc) => RequestModel.fromMap(doc.data(), doc.id)).toList());
+  }
+
+  Stream<List<RequestModel>> getRequestsForUser(String userId) {
+    return _db
+        .collection('requests')
+        .where('requesterId', isEqualTo: userId)
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .map((snapshot) =>
+            snapshot.docs.map((doc) => RequestModel.fromMap(doc.data(), doc.id)).toList());
+  }
+
+  Future<void> updateRequestStatus(String requestId, String status) async {
+    await _db.collection('requests').doc(requestId).update({'status': status});
+  }
+
+  // Player Availability Requests (Players looking for matches)
+  Future<void> createPlayerRequest(PlayerRequestModel request) async {
+    await _db.collection('player_requests').add(request.toMap());
+  }
+
+  Stream<List<PlayerRequestModel>> getPlayerRequests(String ageGroup) {
+    return _db
+        .collection('player_requests')
+        .where('ageGroup', isEqualTo: ageGroup)
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .map((snapshot) =>
+            snapshot.docs.map((doc) => PlayerRequestModel.fromMap(doc.data(), doc.id)).toList());
+  }
+
+  Future<void> deletePlayerRequest(String requestId) async {
+    await _db.collection('player_requests').doc(requestId).delete();
   }
 }
