@@ -40,4 +40,17 @@ class AuthService {
       print("Sign out error: $e");
     }
   }
+
+  Future<void> deleteAccount() async {
+    try {
+      User? user = _auth.currentUser;
+      if (user != null) {
+        await user.delete();
+        await _googleSignIn.signOut();
+      }
+    } catch (e) {
+      print("Delete account error: $e");
+      rethrow; // Rethrow to handle in UI (e.g., if re-authentication is needed)
+    }
+  }
 }
