@@ -16,6 +16,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'firebase_options.dart';
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
@@ -70,6 +72,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Cricket Khelo',
       debugShowCheckedModeBanner: false,
+      navigatorKey: navigatorKey,
       theme: ThemeData(
         primaryColor: Color(0xFF0A192F),
         scaffoldBackgroundColor: Color(0xFFF1F5F9),
@@ -85,7 +88,10 @@ class MyApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: AuthWrapper(),
+      routes: {
+        '/': (context) => const AuthWrapper(),
+      },
+      home: const AuthWrapper(),
     );
   }
 }
