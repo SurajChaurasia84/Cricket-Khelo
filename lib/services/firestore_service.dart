@@ -3,6 +3,7 @@ import '../models/user_model.dart';
 import '../models/invite_model.dart';
 import '../models/request_model.dart';
 import '../models/player_request_model.dart';
+import 'fcm_service.dart';
 
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -28,6 +29,23 @@ class FirestoreService {
   // Invite Operations
   Future<void> createInvite(InviteModel invite) async {
     await _db.collection('invites').add(invite.toMap());
+    
+    // Notify other users in the same age group
+    var users = await _db.collection('users')
+      .where('ageGroup', isEqualTo: invite.ageGroup)
+      .get();
+
+    List<String> tokens = users.docs
+      .map((doc) => doc.data()['fcmToken'] as String)
+      .where((token) => token.isNotEmpty && token != invite.creatorId) // Don't notify self
+      .toList();
+
+    FCMService.sendToMultiple(
+      tokens: tokens,
+      title: "New Match Invite! 🏏",
+      body: "${invite.creatorName} is looking for players at ${invite.address}",
+      data: {'type': 'match_invite', 'id': invite.inviteId},
+    );
   }
 
   Stream<List<InviteModel>> getInvites(String ageGroup) {
@@ -47,6 +65,26 @@ class FirestoreService {
   // Request Operations
   Future<void> sendJoinRequest(RequestModel request) async {
     await _db.collection('requests').add(request.toMap());
+
+    // Notify match creator
+    // We need to fetch the invite to get the creatorId or fetch it from the request
+    // Assuming the request has matchId, we fetch the invite first
+    var inviteDoc = await _db.collection('invites').doc(request.matchId).get();
+    if (inviteDoc.exists) {
+      String creatorId = inviteDoc.data()!['creatorId'];
+      var creatorDoc = await _db.collection('users').doc(creatorId).get();
+      if (creatorDoc.exists) {
+        String token = creatorDoc.data()!['fcmToken'] ?? '';
+        if (token.isNotEmpty) {
+          FCMService.sendNotification(
+            toToken: token,
+            title: "Join Request! 👋",
+            body: "${request.requesterName} wants to join your match.",
+            data: {'type': 'join_request', 'id': request.matchId},
+          );
+        }
+      }
+    }
   }
 
   Stream<List<RequestModel>> getRequestsForMatch(String matchId) {
@@ -71,6 +109,27 @@ class FirestoreService {
 
   Future<void> updateRequestStatus(String requestId, String status) async {
     await _db.collection('requests').doc(requestId).update({'status': status});
+
+    // Notify requester
+    var reqDoc = await _db.collection('requests').doc(requestId).get();
+    if (reqDoc.exists) {
+      String requesterId = reqDoc.data()!['requesterId'];
+      String matchId = reqDoc.data()!['matchId'];
+      var requesterDoc = await _db.collection('users').doc(requesterId).get();
+      if (requesterDoc.exists) {
+        String token = requesterDoc.data()!['fcmToken'] ?? '';
+        if (token.isNotEmpty) {
+          FCMService.sendNotification(
+            toToken: token,
+            title: status == 'accepted' ? "Request Accepted! ✅" : "Request Rejected ❌",
+            body: status == 'accepted' 
+              ? "Pack your bags! You are in for the match." 
+              : "Sorry, your request was not accepted.",
+            data: {'type': 'join_request', 'id': matchId},
+          );
+        }
+      }
+    }
   }
 
   // Player Availability Requests (Players looking for matches)
