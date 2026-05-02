@@ -199,4 +199,8 @@ class FirestoreService {
     }
     await batch.commit();
   }
+
+  Future<void> deleteUser(String uid) async {
+    await _db.collection('users').doc(uid).delete();
+  }
 }
