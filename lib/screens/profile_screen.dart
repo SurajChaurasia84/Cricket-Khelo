@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
 import '../models/user_model.dart';
@@ -77,7 +78,7 @@ class ProfileScreen extends StatelessWidget {
                         radius: 60,
                         backgroundColor: Colors.white24,
                         backgroundImage: user?.photoURL != null 
-                            ? NetworkImage(user!.photoURL!) 
+                            ? CachedNetworkImageProvider(user!.photoURL!) 
                             : null,
                         child: user?.photoURL == null 
                             ? Icon(Icons.person, size: 60, color: Colors.white) 
