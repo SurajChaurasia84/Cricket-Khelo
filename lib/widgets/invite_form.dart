@@ -265,24 +265,32 @@ class _InviteFormState extends State<InviteForm> {
                   final invite = InviteModel(
                     inviteId: '',
                     createdBy: user?.uid ?? 'unknown',
-                    creatorName: _userName, // Using fetched name
+                    creatorName: _userName,
                     creatorPhoto: _userPhoto,
                     playersRequired: _playersRequired,
                     message: _message,
                     ageGroup: widget.ageGroup,
-                    address: _addressController.text, // Saving the confirmed address
+                    address: _addressController.text,
                     lat: _currentLat!,
                     lng: _currentLng!,
                     timestamp: DateTime.now(),
                   );
-                  await firestoreService.createInvite(invite);
+                  
+                  // Store messenger reference
+                  final messenger = ScaffoldMessenger.of(context);
+                  
+                  // Pop FIRST for instant UI response
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  
+                  messenger.showSnackBar(
                     SnackBar(
                       content: Text("Match Invite Published!"),
-                      backgroundColor: Colors.green[700],
+                      backgroundColor: navyDark,
                     ),
                   );
+
+                  // Run Firebase operation in background
+                  await firestoreService.createInvite(invite);
                 }
               },
               child: _isFetchingLocation 
