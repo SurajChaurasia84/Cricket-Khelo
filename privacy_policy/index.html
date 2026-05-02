@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - Cricket Khelo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy-dark: #0A192F;
+            --navy-medium: #112240;
+            --navy-light: #233554;
+            --slate-light: #CCD6F6;
+            --slate-dark: #8892B0;
+            --white: #FFFFFF;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--navy-dark);
+            color: var(--slate-light);
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 60px 0;
+            background: linear-gradient(to bottom, var(--navy-medium), var(--navy-dark));
+            border-bottom: 1px solid var(--navy-light);
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            color: var(--white);
+            font-weight: 900;
+            font-size: 2.5rem;
+            margin: 0;
+            letter-spacing: -1px;
+        }
+
+        .last-updated {
+            color: var(--slate-dark);
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+
+        section {
+            background: var(--navy-medium);
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            border: 1px solid var(--navy-light);
+        }
+
+        h2 {
+            color: var(--white);
+            font-size: 1.5rem;
+            margin-top: 0;
+            border-left: 4px solid var(--slate-light);
+            padding-left: 15px;
+        }
+
+        p {
+            margin-bottom: 15px;
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+
+        .highlight {
+            color: var(--white);
+            font-weight: 700;
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px 0;
+            color: var(--slate-dark);
+            font-size: 0.8rem;
+        }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 1.8rem; }
+            section { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="container">
+        <h1>CRICKET KHELO</h1>
+        <p class="last-updated">Last Updated: May 2026</p>
+    </div>
+</header>
+
+<div class="container">
+    <section>
+        <h2>1. Introduction</h2>
+        <p>Welcome to <span class="highlight">Cricket Khelo</span>. We respect your privacy and are committed to protecting your personal data. This privacy policy informs you about how we look after your personal data when you use our mobile application and tells you about your privacy rights.</p>
+    </section>
+
+    <section>
+        <h2>2. Data We Collect</h2>
+        <p>To provide a seamless experience for finding cricket matches and players, we collect the following information:</p>
+        <ul>
+            <li><span class="highlight">Identity Data:</span> Full name and profile photo (retrieved via Google/Firebase Authentication).</li>
+            <li><span class="highlight">Contact Data:</span> Email address used for account creation.</li>
+            <li><span class="highlight">Location Data:</span> We collect your <span class="highlight">Precise GPS Location</span> (Latitude and Longitude) to calculate the distance between you and other matches or players near you. This is essential for the core functionality of the app.</li>
+            <li><span class="highlight">Social Data:</span> Information you provide in match descriptions, availability requests, and in-app chat messages.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>3. How We Use Your Data</h2>
+        <p>We use your data for the following purposes:</p>
+        <ul>
+            <li>To create and manage your player profile.</li>
+            <li>To display your distance to other users so you can find local matches.</li>
+            <li>To send you push notifications about match invites or chat messages via <span class="highlight">Firebase Cloud Messaging (FCM)</span>.</li>
+            <li>To facilitate real-time communication between captains and players.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>4. Third-Party Services</h2>
+        <p>We use trusted third-party providers to power Cricket Khelo:</p>
+        <ul>
+            <li><span class="highlight">Google Firebase:</span> Used for Authentication, Firestore database, Realtime Database (Chat), and Cloud Messaging (Notifications).</li>
+            <li><span class="highlight">Google Maps/Geolocator:</span> Used to determine your approximate location for match filtering.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>5. Data Security</h2>
+        <p>We have implemented appropriate security measures to prevent your personal data from being accidentally lost, used, or accessed in an unauthorized way. All data is stored securely using Firebase's encrypted infrastructure.</p>
+    </section>
+
+    <section>
+        <h2>6. Your Rights</h2>
+        <p>You have the right to request the deletion of your account and all associated data at any time. You can do this by contacting us or using the logout/account options within the app.</p>
+    </section>
+
+    <section>
+        <h2>7. Contact Us</h2>
+        <p>If you have any questions about this privacy policy or our privacy practices, please contact us at:</p>
+        <p class="highlight">Email: support@cricketkhelo.app</p>
+    </section>
+</div>
+
+<footer>
+    &copy; 2026 Cricket Khelo. All rights reserved.
+</footer>
+
+</body>
+</html>
