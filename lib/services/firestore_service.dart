@@ -39,7 +39,7 @@ class FirestoreService {
 
     List<String> tokens = users.docs
       .map((doc) => doc.data()['fcmToken'] as String)
-      .where((token) => token.isNotEmpty && token != invite.creatorId) // Don't notify self
+      .where((token) => token.isNotEmpty && token != invite.createdBy) // Don't notify self
       .toList();
 
     FCMService.sendToMultiple(
@@ -76,7 +76,7 @@ class FirestoreService {
     // Assuming the request has matchId, we fetch the invite first
     var inviteDoc = await _db.collection('invites').doc(request.matchId).get();
     if (inviteDoc.exists) {
-      String creatorId = inviteDoc.data()!['creatorId'];
+      String creatorId = inviteDoc.data()!['createdBy'];
       var creatorDoc = await _db.collection('users').doc(creatorId).get();
       if (creatorDoc.exists) {
         String token = creatorDoc.data()!['fcmToken'] ?? '';
