@@ -262,16 +262,19 @@ class _PlayerRequestFormState extends State<PlayerRequestForm> {
                   lng: _currentLng!,
                   timestamp: DateTime.now(),
                 );
+                final messenger = ScaffoldMessenger.of(context);
+                
+                // Pop FIRST for instant UI response
+                Navigator.pop(context);
+
+                messenger.showSnackBar(
+                  SnackBar(
+                    content: Text("Availability Posted! Matches will find you."),
+                    backgroundColor: navyDark,
+                  ),
+                );
+
                 await firestoreService.createPlayerRequest(request);
-                if (mounted) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text("Availability Posted! Matches will find you."),
-                      backgroundColor: navyDark,
-                    ),
-                  );
-                }
               },
               child: _isPublishing 
                   ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) 
