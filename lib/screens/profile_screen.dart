@@ -119,7 +119,13 @@ class ProfileScreen extends StatelessWidget {
                         () => Share.share("Hey! Let's play cricket! 🏏\n\nJoin me on *Cricket Khelo* to find matches and players near you. Download now:\nhttps://play.google.com/store/apps/details?id=com.match.cricketkhelo.apps"),
                         navyDark
                       ),
-                      SizedBox(height: 50),
+                      _buildActionItem(
+                        Icons.help_outline_rounded, 
+                        "Help & Support", 
+                        () => _launchURL("mailto:aakashkumarna26@gmail.com?subject=Help Support - Cricket Khelo"), 
+                        navyDark
+                      ),
+                      SizedBox(height: 30),
                       FutureBuilder<PackageInfo>(
                         future: PackageInfo.fromPlatform(),
                         builder: (context, snapshot) {
