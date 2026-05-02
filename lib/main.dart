@@ -120,6 +120,9 @@ class _AuthWrapperState extends State<AuthWrapper> {
     if (notificationService != null) {
       await notificationService.initNotifications();
     }
+
+    final firestoreService = Provider.of<FirestoreService>(context, listen: false);
+    firestoreService.checkAndPerformReset(); // Trigger in background, don't wait
     
     if (mounted) {
       setState(() {
