@@ -1,4 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:intl/intl.dart';
 import '../models/user_model.dart';
 import '../models/invite_model.dart';
 import '../models/request_model.dart';
@@ -49,9 +51,12 @@ class FirestoreService {
   }
 
   Stream<List<InviteModel>> getInvites(String ageGroup) {
+    final DateTime todayMidnight = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+    
     return _db
         .collection('invites')
         .where('ageGroup', isEqualTo: ageGroup)
+        .where('timestamp', isGreaterThanOrEqualTo: todayMidnight)
         .orderBy('timestamp', descending: true)
         .snapshots()
         .map((snapshot) =>
@@ -88,9 +93,12 @@ class FirestoreService {
   }
 
   Stream<List<RequestModel>> getRequestsForMatch(String matchId) {
+    final DateTime todayMidnight = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+    
     return _db
         .collection('requests')
         .where('matchId', isEqualTo: matchId)
+        .where('timestamp', isGreaterThanOrEqualTo: todayMidnight)
         .orderBy('timestamp', descending: true)
         .snapshots()
         .map((snapshot) =>
@@ -98,9 +106,12 @@ class FirestoreService {
   }
 
   Stream<List<RequestModel>> getRequestsForUser(String userId) {
+    final DateTime todayMidnight = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+    
     return _db
         .collection('requests')
         .where('requesterId', isEqualTo: userId)
+        .where('timestamp', isGreaterThanOrEqualTo: todayMidnight)
         .orderBy('timestamp', descending: true)
         .snapshots()
         .map((snapshot) =>
@@ -138,9 +149,12 @@ class FirestoreService {
   }
 
   Stream<List<PlayerRequestModel>> getPlayerRequests(String ageGroup) {
+    final DateTime todayMidnight = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+    
     return _db
         .collection('player_requests')
         .where('ageGroup', isEqualTo: ageGroup)
+        .where('timestamp', isGreaterThanOrEqualTo: todayMidnight)
         .orderBy('timestamp', descending: true)
         .snapshots()
         .map((snapshot) =>
@@ -149,5 +163,40 @@ class FirestoreService {
 
   Future<void> deletePlayerRequest(String requestId) async {
     await _db.collection('player_requests').doc(requestId).delete();
+  }
+
+  // Daily Reset Logic
+  Future<void> checkAndPerformReset() async {
+    final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final DocumentReference metadataRef = _db.collection('system').doc('metadata');
+    
+    var doc = await metadataRef.get();
+    if (doc.exists && doc.get('last_reset_date') == today) {
+      // Already reset today
+      return;
+    }
+
+    print("Midnight Reset: Starting daily cleanup...");
+    
+    // 1. Clear Firestore Collections
+    await _clearCollection('invites');
+    await _clearCollection('requests');
+    await _clearCollection('player_requests');
+
+    // 2. Clear Realtime Database (Chats)
+    await FirebaseDatabase.instance.ref('chats').remove();
+
+    // 3. Update Reset Date
+    await metadataRef.set({'last_reset_date': today});
+    print("Midnight Reset: Cleanup complete!");
+  }
+
+  Future<void> _clearCollection(String collectionPath) async {
+    var snapshot = await _db.collection(collectionPath).get();
+    var batch = _db.batch();
+    for (var doc in snapshot.docs) {
+      batch.delete(doc.reference);
+    }
+    await batch.commit();
   }
 }
