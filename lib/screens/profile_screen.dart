@@ -135,7 +135,7 @@ class ProfileScreen extends StatelessWidget {
                       _buildActionItem(
                         Icons.help_outline_rounded, 
                         "Help & Support", 
-                        () => _launchURL("mailto:aakashkumarna26@gmail.com?subject=Help Support - Cricket Khelo"), 
+                        () => _launchURL("mailto:rajkumar925262@gmail.com?subject=Help Support - Cricket Khelo"), 
                         navyDark
                       ),
                       SizedBox(height: 30),
