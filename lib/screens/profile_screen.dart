@@ -123,7 +123,7 @@ class ProfileScreen extends StatelessWidget {
                       _buildActionItem(
                         Icons.privacy_tip_outlined, 
                         "Privacy Policy", 
-                        () => _launchURL("https://surajchaurasia84.github.io/Cricket-Khelo/privacy_policy/"), 
+                        () => _launchURL("https://surajchaurasia84.github.io/Cricket-Khelo/"), 
                         navyDark
                       ),
                       _buildActionItem(
