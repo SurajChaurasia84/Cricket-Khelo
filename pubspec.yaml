@@ -52,6 +52,7 @@ dependencies:
   http: ^1.2.1
   cached_network_image: ^3.4.1
   googleapis_auth: ^1.6.0
+  unity_ads_plugin: ^0.3.30
 
 dev_dependencies:
   flutter_test:

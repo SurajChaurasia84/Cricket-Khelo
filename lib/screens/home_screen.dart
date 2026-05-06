@@ -17,6 +17,7 @@ import '../services/auth_service.dart';
 import '../widgets/invite_form.dart';
 import '../widgets/player_request_form.dart';
 import 'profile_screen.dart';
+import 'package:unity_ads_plugin/unity_ads_plugin.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -39,6 +40,15 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    
+    // Initialize Unity Ads
+    UnityAds.init(
+      gameId: '6091434',
+      testMode: false,
+      onComplete: () => print('Unity Ads Initialization Complete'),
+      onFailed: (error, message) => print('Unity Ads Initialization Failed: $error $message'),
+    );
+
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging) {
         setState(() {}); // Update PopScope canPop state
@@ -886,6 +896,14 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           _buildInviteList("Under20", firestoreService),
           _buildInviteList("20+", firestoreService),
         ],
+      ),
+      bottomNavigationBar: SafeArea(
+        child: UnityBannerAd(
+          placementId: 'Banner_Android',
+          onLoad: (placementId) => print('Banner loaded: $placementId'),
+          onClick: (placementId) => print('Banner clicked: $placementId'),
+          onFailed: (placementId, error, message) => print('Banner ad $placementId failed: $error $message'),
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showActionBottomSheet,
